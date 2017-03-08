@@ -4,9 +4,9 @@ import edu.princeton.cs.algs4.StdRandom;
 
 public class Percolation {
 
-	public int virtualTopSite;
+	private int virtualTopSite;
 
-	public int virtualBottonSite;
+	private int virtualBottonSite;
 
 	// the grid itself
 	private int[] grid;
@@ -16,13 +16,14 @@ public class Percolation {
 
 	// the list of opened sites
 	private int[] openedSites;
-	
+
 	private int n;
 
 	/**
 	 * create n-by-n grid, with all sites blocked
 	 * 
-	 * @param n matrix dimension (n x n)
+	 * @param n
+	 *            matrix dimension (n x n)
 	 * 
 	 */
 	public Percolation(int n) {
@@ -36,24 +37,14 @@ public class Percolation {
 
 		grid = new int[gridSize + 2];
 		siteWeight = new int[grid.length];
-		openedSites = new int[gridSize];
+		openedSites = new int[grid.length];
 
 		// prepare the grid and its weight indexing
 		// set up the top virtual site
 		for (int i = 0; i < virtualBottonSite + 1; i++) {
-			if (i < n) {
-				grid[i] = virtualTopSite;
+			grid[i] = i;
+			if (i > virtualTopSite - 1) {
 				siteWeight[i]++;
-				openedSites[i] = 1;
-			} else if (i >= gridSize - n && i < virtualTopSite) {
-				grid[i] = virtualBottonSite;
-				siteWeight[i]++;
-				openedSites[i] = 1;
-			} else {
-				grid[i] = i;
-				if (i >= virtualTopSite - 1) {
-					siteWeight[i]++;
-				}
 			}
 		}
 	}
@@ -75,6 +66,12 @@ public class Percolation {
 		int westIndex = makePlainIndex(west[0], west[1]);
 		int eastIndex = makePlainIndex(east[0], east[1]);
 
+		if (row == 0) {
+			union(site, virtualTopSite);
+		} else if (row == n - 1) {
+			union(site, virtualBottonSite);
+		}
+
 		if (northIndex >= 0) {
 			if (isOpen(north[0], north[1])) {
 				union(site, northIndex);
@@ -95,12 +92,14 @@ public class Percolation {
 				union(site, eastIndex);
 			}
 		}
-		
+
 		openedSites[site] = 1;
 	}
 
 	/**
 	 * is site (row, col) open?
+	 * 
+	 * O(1)
 	 * 
 	 */
 	public boolean isOpen(int row, int col) {
@@ -108,7 +107,7 @@ public class Percolation {
 	}
 
 	private int makePlainIndex(int row, int col) {
-		if (row < 0 || col < 0 || col > n || row > n) {
+		if (row < 0 || col < 0 || col > n-1 || row > n-1) {
 			return -1;
 		}
 		if (row == 1) {
@@ -116,7 +115,7 @@ public class Percolation {
 		} else if (row == 0) {
 			return col;
 		} else {
-			return ((row - 1) * n) + col;
+			return (row * n) + col;
 		}
 	}
 
@@ -141,7 +140,7 @@ public class Percolation {
 	 * 
 	 */
 	public boolean percolates() {
-		return grid[grid.length-1] == virtualTopSite;
+		return grid[grid.length - 1] == virtualTopSite;
 	}
 
 	// TODO: these methods are supposed to be private. they are opened for test
