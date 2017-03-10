@@ -4,24 +4,21 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
 import edu.princeton.cs.algs4.StdRandom;
+import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
+
+	// grid dimension
+	private int n;
+
+	private WeightedQuickUnionUF grid;
 
 	private int virtualTopSite;
 
 	private int virtualBottonSite;
 
-	// the grid itself
-	private int[] grid;
-
-	// the weight for each site
-	private int[] siteWeight;
-
 	// the list of opened sites
 	private int[] openedSites;
-
-	// grid dimension
-	private int n;
 
 	// flag to export file results
 	private boolean exportResults;
@@ -31,47 +28,30 @@ public class Percolation {
 
 	private PrintWriter out;
 
-	/**
-	 * create n-by-n grid, with all sites blocked
-	 * 
-	 * @param n
-	 *            matrix dimension (n x n)
-	 * 
-	 */
-	public Percolation(final int n) {
+	public Percolation(int n) {
 
 		this.n = n;
 
 		int gridSize = (int) Math.pow(n, 2);
 
-		// flag set to false by default;
-		exportResults = false;
-
 		virtualTopSite = gridSize;
 		virtualBottonSite = gridSize + 1;
 
-		grid = new int[gridSize + 2];
-		siteWeight = new int[grid.length];
-		openedSites = new int[grid.length];
+		grid = new WeightedQuickUnionUF(gridSize + 2);
 
-		// prepare the grid and its weight indexing
-		// set up the top virtual site
-		for (int i = 0; i < virtualBottonSite + 1; i++) {
-			grid[i] = i;
-			if (i > virtualTopSite - 1) {
-				siteWeight[i]++;
-			}
-		}
+		openedSites = new int[gridSize + 2];
+
 	}
 
 	/**
-	 * Additional constructor to be able to configure an export
-	 * file
+	 * Additional constructor to be able to configure an export file
 	 * 
-	 * @param n the grid dimension;
-	 * @param fileToExportResults file containing the results
+	 * @param n
+	 *            the grid dimension;
+	 * @param fileToExportResults
+	 *            file containing the results
 	 * 
-	 * */
+	 */
 	public Percolation(final int n, final String fileToExportResults) {
 		this(n);
 		this.pathFileResults = fileToExportResults;
@@ -81,11 +61,13 @@ public class Percolation {
 	/**
 	 * open site (row, col) if it is not open already
 	 * 
-	 * @param row coordinate's row
-	 * @param col coordinate's column
-	 * "row index i out of bounds"
-	 * @throws IllegalArgumentException throws an {@link IllegalArgumentException} when
-	 * row or column are invalid 
+	 * @param row
+	 *            coordinate's row
+	 * @param col
+	 *            coordinate's column "row index i out of bounds"
+	 * @throws IllegalArgumentException
+	 *             throws an {@link IllegalArgumentException} when row or column
+	 *             are invalid
 	 * 
 	 */
 	public void open(int row, int col) {
@@ -95,6 +77,7 @@ public class Percolation {
 		}
 
 		int site = makePlainIndex(row, col);
+
 		int[] north = { row - 1, col };
 		int[] south = { row + 1, col };
 		int[] west = { row, col - 1 };
@@ -106,29 +89,29 @@ public class Percolation {
 		int eastIndex = makePlainIndex(east[0], east[1]);
 
 		if (row == 1) {
-			union(site, virtualTopSite);
+			grid.union(virtualTopSite, site);
 		} else if (row == n) {
-			union(site, virtualBottonSite);
+			grid.union(virtualBottonSite, site);
 		}
 
 		if (northIndex >= 0) {
 			if (isOpen(north[0], north[1])) {
-				union(site, northIndex);
+				grid.union(northIndex, site);
 			}
 		}
 		if (southIndex >= 0) {
 			if (isOpen(south[0], south[1])) {
-				union(site, southIndex);
+				grid.union(southIndex, site);
 			}
 		}
 		if (westIndex >= 0) {
 			if (isOpen(west[0], west[1])) {
-				union(site, westIndex);
+				grid.union(westIndex, site);
 			}
 		}
 		if (eastIndex >= 0) {
 			if (isOpen(east[0], east[1])) {
-				union(site, eastIndex);
+				grid.union(eastIndex, site);
 			}
 		}
 
@@ -136,41 +119,18 @@ public class Percolation {
 	}
 
 	/**
-	 * Tells if a given coordinate is opened
-	 * O(1)
+	 * Tells if a given coordinate is opened O(1)
 	 * 
-	 * @param row coordinate's row
-	 * @param col coordinate's column
+	 * @param row
+	 *            coordinate's row
+	 * @param col
+	 *            coordinate's column
 	 * 
 	 * @return a boolean values
 	 * 
 	 */
 	public boolean isOpen(int row, int col) {
 		return openedSites[makePlainIndex(row, col)] == 1;
-	}
-
-	/**
-	 * Transforms a coordinate into plain index
-	 * 
-	 * @param row coordinate's row
-	 * @param col coordinate's column
-	 * 
-	 * @return a integer number based on grid's dimension
-	 * 
-	 */
-	public int makePlainIndex(int row, int col) {
-		if (row < 1 || col < 1 || col > n || row > n) {
-			return -1;
-		}
-		if (row == 1) {
-			return col - 1;
-		} else if (col == 1) {
-			return ((row - 1) * n);
-		} else if (col == n) {
-			return (row * n) - 1;
-		} else {
-			return ((row - 1) * n) + col - 1;
-		}
 	}
 
 	/**
@@ -187,11 +147,12 @@ public class Percolation {
 
 		int site = makePlainIndex(row, col);
 
-		int root = root(site);
+		int root = grid.find(site);
 
 		return root == virtualBottonSite || root == virtualTopSite;
 	}
-
+	
+	
 	/**
 	 * retrieves the total of opened sites
 	 * @return the count
@@ -206,54 +167,43 @@ public class Percolation {
 			}
 		}
 		return count;
-	}
+	} 
 
-	/**
-	 * Tells if the system percolates
-	 * 
-	 *  @return a boolean value
-	 */
 	public boolean percolates() {
-		return grid[grid.length - 1] == grid[grid.length - 2];
-	}
+		return grid.find(virtualBottonSite) == grid.find(virtualTopSite);
+	} // does the system percolate?
 
-	private void union(final int from, final int to) {
-		int rootFrom = root(from);
-		int rootTo = root(to);
-
-		if (rootFrom == rootTo) {
-			return;
+	/**
+	 * Transforms a coordinate into plain index
+	 * 
+	 * @param row
+	 *            coordinate's row
+	 * @param col
+	 *            coordinate's column
+	 * 
+	 * @return a integer number based on grid's dimension
+	 * 
+	 */
+	private int makePlainIndex(int row, int col) {
+		if (row < 1 || col < 1 || col > n || row > n) {
+			return -1;
 		}
-
-		if (rootTo == virtualBottonSite || rootTo == virtualBottonSite) {
-			grid[rootFrom] = rootTo;
-			siteWeight[rootTo] += siteWeight[rootFrom];
-		} else if (rootFrom == virtualBottonSite || rootFrom == virtualBottonSite) {
-			grid[rootTo] = rootTo;
-			siteWeight[rootFrom] += siteWeight[rootTo];
-		} else if (siteWeight[rootFrom] < siteWeight[rootTo]) {
-			grid[rootFrom] = rootTo;
-			siteWeight[rootTo] += siteWeight[rootFrom];
+		if (row == 1) {
+			return col - 1;
+		} else if (col == 1) {
+			return ((row - 1) * n);
+		} else if (col == n) {
+			return (row * n) - 1;
 		} else {
-			grid[rootTo] = rootFrom;
-			siteWeight[rootFrom] += siteWeight[rootTo];
+			return ((row - 1) * n) + col - 1;
 		}
-	}
-
-	private int root(final int site) {
-		int root = site;
-		while (virtualTopSite != root && virtualBottonSite != root && root != grid[root]) {
-			root = grid[root];
-		}
-		return root;
 	}
 
 	/**
-	 * Run the percolation system, in a full closed grid
-	 * opening the grid with random numbers generated within
-	 * the grid's dimension borders.
+	 * Run the percolation system, in a full closed grid opening the grid with
+	 * random numbers generated within the grid's dimension borders.
 	 * 
-	 * */
+	 */
 	public void run() {
 		int row = -1;
 		int col = -1;
@@ -282,7 +232,7 @@ public class Percolation {
 
 	private void printCoordinates(final int row, final int col) {
 		if (exportResults) {
-			printValue(row + " " + col + " ");
+			printValue(" " + row + " " + col);
 		}
 	}
 
@@ -303,4 +253,5 @@ public class Percolation {
 			out.close();
 		}
 	}
+
 }

@@ -64,7 +64,7 @@ public class PercolationVisualizer {
 	}
 
 	public static void main(String[] args) {
-		int n = 250;
+		int n = 200;
 
 		// turn on animation mode
 		StdDraw.enableDoubleBuffering();

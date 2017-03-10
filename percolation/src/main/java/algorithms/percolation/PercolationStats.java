@@ -36,6 +36,8 @@ public class PercolationStats {
 		
 		results = new int[iterations];
 
+		n = 10000;
+		
 		for (int i = 0; i < iterations; i++) {
 			// if has a third parameter for exporting
 			// coordinates results
@@ -48,9 +50,6 @@ public class PercolationStats {
 			results[i] = percolation.numberOfOpenSites();
 			System.out.println(results[i]);
 		}
-		System.out.println("");
-		System.out.println(mean());
-
 	}
 
 }
