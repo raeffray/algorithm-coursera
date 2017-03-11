@@ -1,4 +1,4 @@
-package algorithms.percolation;
+
 /******************************************************************************
  *  Compilation:  javac PercolationVisualizer.java
  *  Execution:    java PercolationVisualizer input.txt
@@ -64,7 +64,7 @@ public class PercolationVisualizer {
 	}
 
 	public static void main(String[] args) {
-		int n = 200;
+		int n = 100;
 
 		// turn on animation mode
 		StdDraw.enableDoubleBuffering();
@@ -90,7 +90,7 @@ public class PercolationVisualizer {
 				}
 			}
 		}
-
+		int  a= 1;
 		
 	}
 }

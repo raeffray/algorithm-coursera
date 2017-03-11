@@ -1,13 +1,7 @@
 package algorithms.percolation;
 
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
-import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
-import edu.princeton.cs.algs4.StdRandom;
-import edu.princeton.cs.algs4.Stopwatch;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class PercolationTest_ {
