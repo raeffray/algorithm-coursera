@@ -1,136 +1,246 @@
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-
+import edu.princeton.cs.algs4.Out;
+import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
 
 public class PercolationStats {
 
-	private static final String CARRIAGE_RETURN = "\n";
+    private static final String CARRIAGE_RETURN = "\n";
 
-	private static Percolation percolation;
+    private double[] results;
 
-	private static double results[];
+    private int iterations;
 
-	private static int iterations;
+    private int gridDimension;
 
-	private static int gridDimension;
+    // flag to export statistics to a file
+    private boolean exportStatResults;
 
-	// flag to export file results
-	private static boolean exportResults;
+    // flag to export coordinates to a file
+    private boolean exportCoorResults;
 
-	// file to export the results
-	private static String pathFileResults;
+    // file to export the results
+    private String pathStatFileResults;
 
-	private static PrintWriter out;
+    // file to export the results
+    private String pathCooFileResults;
 
-	public PercolationStats(int n, int trials) {
+    private Out outStat;
 
-	}
+    private Out outCoor;
 
-	/**
-	 * sample mean of percolation threshold
-	 * 
-	 */
-	public static double mean() {
-		return StdStats.mean(results);
-	}
+    private Percolation[] percolations;
 
-	/**
-	 * sample standard deviation of percolation threshold
-	 * 
-	 */
-	public static double stddev() {
-		return StdStats.stddev(results);
-	}
+    public PercolationStats(int n, int trials) {
+        if (n <= 0 || n >= 10000 || trials <= 0) {
+            throw new IllegalArgumentException();
+        }
 
-	/**
-	 * low endpoint of 95% confidence interval
-	 * 
-	 */
-	public static double confidenceLo() {
-		return mean() - ((1.96d * (stddev())) / Math.sqrt(iterations));
-	}
+        gridDimension = n;
+        iterations = trials;
+        results = new double[iterations];
 
-	/**
-	 * high endpoint of 95% confidence interval
-	 * 
-	 */
-	public static double confidenceHi() {
-		return mean() + ((1.96d * (stddev())) / Math.sqrt(iterations));
-	}
+        percolations = new Percolation[iterations];
+        for (int i = 0; i < iterations; i++) {
+            percolations[i] = new Percolation(gridDimension);
+        }
 
-	public static void main(String[] args) {
-		double gridSize = 0;
-		gridDimension = Integer.valueOf(args[0]);
-		iterations = Integer.valueOf(args[1]);
+    }
 
-		if (args.length >= 3) {
-			pathFileResults = args[2];
-			exportResults = true;
-		}
+    /**
+     * sample mean of percolation threshold
+     * 
+     */
+    public double mean() {
+        return StdStats.mean(results);
+    }
 
-		results = new double[iterations];
+    /**
+     * sample standard deviation of percolation threshold
+     * 
+     */
+    public double stddev() {
+        return StdStats.stddev(results);
+    }
 
-		long begin = System.currentTimeMillis();
-		
-		for (int i = 0; i < iterations; i++) {
-			// if has a third parameter for exporting
-			// coordinates results
-			if (args.length == 4) {
-				percolation = new Percolation(gridDimension, args[3]);
-			} else {
-				percolation = new Percolation(gridDimension);
-			}
-			percolation.run();
-			gridSize = Math.pow(gridDimension, 2);
-			results[i] = (percolation.numberOfOpenSites() / (double) gridSize);
-		}
+    /**
+     * low endpoint of 95% confidence interval
+     * 
+     */
+    public double confidenceLo() {
+        return mean() - ((1.96d * (stddev())) / Math.sqrt(iterations));
+    }
 
-		StringBuffer buffer = new StringBuffer();
+    /**
+     * high endpoint of 95% confidence interval
+     * 
+     */
+    public double confidenceHi() {
+        return mean() + ((1.96d * (stddev())) / Math.sqrt(iterations));
+    }
 
-		buffer.append("mean                    = ").append(mean()).append(CARRIAGE_RETURN);
-		buffer.append("stddev                  = ").append(mean()).append(CARRIAGE_RETURN);
-		buffer.append("mean                    = ").append(mean()).append(CARRIAGE_RETURN);
-		buffer.append("95% confidence interval = [").append(confidenceLo()).append(", ").append(confidenceHi())
-				.append("]").append(CARRIAGE_RETURN);
-		buffer.append(CARRIAGE_RETURN);
-		buffer.append("iterations              = ").append(iterations).append(CARRIAGE_RETURN);
-		buffer.append("dimension               = ").append(gridSize).append(CARRIAGE_RETURN);
-		buffer.append("execution time (ms)     = ").append(System.currentTimeMillis() - begin).append(CARRIAGE_RETURN);
+    public static void main(String[] args) {
 
-		if (exportResults) {
-			openFile();
-			printValue(buffer.toString());
-			closeFile();
-		} else {
-			System.out.println(buffer.toString());
-		}
+        double gridSize = 0;
 
-	}
+        if (args.length < 2) {
 
-	private static void printValue(final String value) {
-		if (exportResults) {
-			out.print(value);
-		}
-	}
+            StringBuffer buffer = new StringBuffer();
 
-	private static void openFile() {
-		if (out == null && exportResults) {
-			try {
-				out = new PrintWriter(pathFileResults);
-			} catch (FileNotFoundException e) {
-				System.out.print("ERROR OPENING FILE. RESULTS WILL NOT BE EXPORTED");
-				exportResults = false;
-			}
-		}
-	}
+            buffer.append("insuficient arguments: ").append(CARRIAGE_RETURN);
+            buffer.append("************ USAGE *************").append(CARRIAGE_RETURN);
+            buffer.append(PercolationStats.class.getName())
+                    .append(" <grid dimension[required]> <# of iteractions[required]> ")
+                    .append("<export-statistic-results-file[optional]> <export-coordinates-results-file[optional]>")
+                    .append(CARRIAGE_RETURN);
+            buffer.append("*******************************").append(CARRIAGE_RETURN);
 
-	private static void closeFile() {
-		if (out != null) {
-			out.flush();
-			out.close();
-		}
-	}
+            throw new IllegalArgumentException(buffer.toString());
+        }
+
+        int dimension = Integer.parseInt(args[0]);
+        int iterations = Integer.parseInt(args[1]);
+        String pathStat = null;
+        String pathCoor = null;
+
+        if (args.length >= 3) {
+            pathStat = args[2];
+        }
+
+        if (args.length == 4) {
+            pathCoor = args[3];
+        }
+
+        PercolationStats percolationStats = new PercolationStats(dimension, iterations);
+        percolationStats.setPathCooFileResults(pathCoor);
+        percolationStats.setPathStatFileResults(pathStat);
+
+        double[] results = new double[iterations];
+
+        for (int i = 0; i < iterations; i++) {
+            // if has a third parameter for exporting
+            // coordinates results
+            Percolation percolation = percolationStats.getPercolations()[i];
+            percolationStats.runPercolation(percolation);
+            gridSize = Math.pow(dimension, 2);
+            results[i] = (percolation.numberOfOpenSites() / gridSize);
+        }
+
+        percolationStats.setResults(results);
+
+        StringBuffer buffer = new StringBuffer();
+
+        buffer.append("mean                    = ").append(percolationStats.mean()).append(CARRIAGE_RETURN);
+        buffer.append("stddev                  = ").append(percolationStats.mean()).append(CARRIAGE_RETURN);
+        buffer.append("mean                    = ").append(percolationStats.mean()).append(CARRIAGE_RETURN);
+        buffer.append("95% confidence interval = [").append(percolationStats.confidenceLo()).append(", ")
+                .append(percolationStats.confidenceHi()).append("]").append(CARRIAGE_RETURN);
+        // buffer.append(CARRIAGE_RETURN);
+        // buffer.append("iterations =
+        // ").append(iterations).append(CARRIAGE_RETURN);
+        // buffer.append("dimension =
+        // ").append(gridSize).append(CARRIAGE_RETURN);
+        // buffer.append("execution time (ms) =
+        // ").append(System.currentTimeMillis() -
+        // begin).append(CARRIAGE_RETURN);
+
+        if (percolationStats.isExportStatResults()) {
+            percolationStats.printValue(buffer.toString());
+        } else {
+            System.out.println(buffer.toString());
+        }
+        percolationStats.closeFiles();
+    }
+
+    private void printValue(final String value) {
+        if (exportStatResults) {
+            outStat.print(value);
+        }
+    }
+
+    private void printSingleValueCoor(final String value) {
+        if (exportCoorResults) {
+            outCoor.print(value);
+        }
+    }
+
+    private void printCoordinates(final int row, final int col) {
+        if (exportCoorResults) {
+            outCoor.print(" " + row + " " + col);
+        }
+    }
+
+    private void openFiles() {
+        if (outStat == null && exportStatResults) {
+            outStat = new Out(pathStatFileResults);
+        }
+        if (outCoor == null && exportCoorResults) {
+            outCoor = new Out(pathCooFileResults);
+        }
+    }
+
+    private void closeFiles() {
+        if (outStat != null) {
+            outStat.close();
+        }
+        if (outCoor != null) {
+            outCoor.close();
+        }
+    }
+
+    /**
+     * Run the percolation system, in a full closed grid opening the grid with
+     * random numbers generated within the grid's dimension borders.
+     * 
+     */
+    private void runPercolation(Percolation percolation) {
+        int row = -1;
+        int col = -1;
+        printSingleValueCoor(String.valueOf(percolation));
+        while (!percolation.percolates()) {
+            row = StdRandom.uniform(getGridDimension() + 1);
+            col = StdRandom.uniform(getGridDimension() + 1);
+            row = row == 0 ? 1 : row;
+            col = col == 0 ? 1 : col;
+            if (row > 0 && col > 0) {
+                if (!percolation.isOpen(row, col)) {
+                    percolation.open(row, col);
+                    printCoordinates(row, col);
+                }
+            }
+        }
+    }
+
+    private int getGridDimension() {
+        return gridDimension;
+    }
+
+    private boolean isExportStatResults() {
+        return exportStatResults;
+    }
+
+    private void setPathStatFileResults(String pathStatFileResults) {
+        if (pathStatFileResults != null) {
+            this.pathStatFileResults = pathStatFileResults;
+            exportStatResults = true;
+            openFiles();
+        }
+    }
+
+    private void setPathCooFileResults(String pathCooFileResults) {
+        if (pathCooFileResults != null) {
+            this.pathCooFileResults = pathCooFileResults;
+            exportCoorResults = true;
+            openFiles();
+        }
+    }
+
+    private void setResults(double[] results) {
+        this.results = results;
+    }
+
+    private Percolation[] getPercolations() {
+        return percolations;
+    }
 
 }
